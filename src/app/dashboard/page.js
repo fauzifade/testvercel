@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { database } from "../firebase"; // Pastikan path ini benar
+import { database } from "../../lib/firebase"; // Pastikan path ini benar
 import { ref, onValue } from "firebase/database";
 
 export default function Dashboard() {

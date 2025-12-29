@@ -2,7 +2,6 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  // --- PASTE CONFIG KAMU DI SINI (JANGAN SAMPAI HILANG) ---
   apiKey: "AIzaSyBMCZJifEaR3JTV00Huy1lLYUjxWxvBkNk",
   authDomain: "testiotdivercelfirebase.firebaseapp.com",
   databaseURL: "https://testiotdivercelfirebase-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -13,9 +12,8 @@ const firebaseConfig = {
   measurementId: "G-J0XT6V87WT"
 };
 
-// --- BAGIAN INI YANG KITA UBAH ---
-// Logika: Cek apakah ada app yang sudah jalan?
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// LOGIKA BARU: Cek dulu sebelum nyalain
+// "Kalau apps-nya 0 (belum ada), nyalain baru. Kalau udah ada, pake yang lama."
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Export database biar bisa dipakai
 export const database = getDatabase(app);
