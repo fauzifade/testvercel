@@ -12,8 +12,14 @@ const firebaseConfig = {
   measurementId: "G-J0XT6V87WT"
 };
 
-// LOGIKA BARU: Cek dulu sebelum nyalain
-// "Kalau apps-nya 0 (belum ada), nyalain baru. Kalau udah ada, pake yang lama."
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// JURUS GLOBAL VARIABLE:
+// Kita simpan app di variabel global biar tidak hilang/reset saat build
+let app;
+
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp(); 
+}
 
 export const database = getDatabase(app);
