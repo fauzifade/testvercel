@@ -12,8 +12,6 @@ const firebaseConfig = {
   measurementId: "G-J0XT6V87WT"
 };
 
-// JURUS GLOBAL VARIABLE:
-// Kita simpan app di variabel global biar tidak hilang/reset saat build
 let app;
 
 if (getApps().length === 0) {

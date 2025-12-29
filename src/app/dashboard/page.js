@@ -1,57 +1,81 @@
 "use client";
 import { useEffect, useState } from "react";
-import { database } from "../../lib/firebase"; // Pastikan path ini benar
-import { ref, onValue } from "firebase/database";
+import { database } from "../../lib/firebase"; 
+import { ref, onValue, set } from "firebase/database";
 
 export default function Dashboard() {
-  const [suhu, setSuhu] = useState(0);
-  const [lastUpdate, setLastUpdate] = useState("");
+  const [data, setData] = useState({
+    suhu: 0,
+    gas: 0,
+    ph: 0,
+    status_heater: "OFF",
+    status_dynamo: "OFF"
+  });
+
+  const [isDynamoOn, setIsDynamoOn] = useState(false);
 
   useEffect(() => {
-    // KUNCI UTAMA: Kita "dengar" data dari folder 'cek'
-    const sensorRef = ref(database, 'cek'); 
-    
-    // Fungsi ini jalan otomatis tiap angka di Firebase berubah
-    const unsubscribe = onValue(sensorRef, (snapshot) => {
-      const data = snapshot.val();
-      console.log("Data masuk:", data); // Cek di Console Browser (F12) kalau penasaran
-      
-      if (data && data.suhu !== undefined) {
-        setSuhu(data.suhu);
-        // Bikin jam update otomatis
-        const now = new Date();
-        setLastUpdate(now.toLocaleTimeString());
-      }
+    const monitorRef = ref(database, 'monitoring');
+    const unsubMonitor = onValue(monitorRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val) setData(val);
     });
 
-    // Bersih-bersih memori pas keluar halaman
-    return () => unsubscribe();
+    const controlRef = ref(database, 'control/dynamo_switch');
+    const unsubControl = onValue(controlRef, (snapshot) => {
+      setIsDynamoOn(snapshot.val() || false);
+    });
+
+    return () => {
+      unsubMonitor();
+      unsubControl();
+    };
   }, []);
 
+  const toggleDynamo = () => {
+    const newState = !isDynamoOn;
+    set(ref(database, 'control/dynamo_switch'), newState);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold mb-8 text-blue-400">🔥 IoT Monitor Sederhana</h1>
-
-      {/* KARTU SUHU */}
-      <div className="bg-gray-800 p-10 rounded-2xl border-2 border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.5)] text-center">
-        <p className="text-gray-400 text-lg mb-2">Suhu Ruangan</p>
-        
-        {/* ANGKA GEDE */}
-        <div className="text-7xl font-mono font-bold text-white mb-4">
-          {suhu}°C
+    <div className="min-h-screen bg-slate-900 text-white p-6 flex flex-col items-center">
+      <h1 className="text-2xl font-bold mb-6 text-blue-400">🎛️ Control Panel IoT</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mb-8">
+        <div className={`p-6 rounded-xl border-l-4 ${data.suhu >= 40 ? 'bg-red-900/50 border-red-500' : 'bg-slate-800 border-blue-500'}`}>
+          <p className="text-gray-400 text-sm">Suhu Air</p>
+          <p className="text-4xl font-bold">{data.suhu}°C</p>
+          <p className="text-xs mt-2">Heater: {data.status_heater}</p>
         </div>
-
-        {/* STATUS NYALA */}
-        <div className="flex items-center justify-center gap-2 bg-gray-900/50 py-2 px-4 rounded-full">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-          </span>
-          <span className="text-xs text-green-400">Live Update: {lastUpdate}</span>
+        <div className="p-6 rounded-xl border-l-4 bg-slate-800 border-yellow-500">
+          <p className="text-gray-400 text-sm">Gas Metana</p>
+          <p className="text-4xl font-bold">{data.gas} <span className="text-lg">ppm</span></p>
+        </div>
+        <div className={`p-6 rounded-xl border-l-4 ${data.ph > 8 ? 'bg-red-900/50 border-red-500' : 'bg-slate-800 border-green-500'}`}>
+          <p className="text-gray-400 text-sm">Kadar pH</p>
+          <p className="text-4xl font-bold">{data.ph}</p>
         </div>
       </div>
-
-      <p className="mt-8 text-gray-500 text-sm">Data dari ESP32 via Firebase</p>
+      <div className="bg-slate-800 p-8 rounded-2xl w-full max-w-md text-center border border-slate-700 shadow-xl">
+        <h2 className="text-xl font-bold mb-4">⚙️ Kontrol Dinamo</h2>
+        <div className="mb-6 p-3 bg-slate-900 rounded-lg">
+          Status: <span className={`font-mono font-bold ${data.status_dynamo.includes("OFF") ? "text-red-400" : "text-green-400"}`}>
+            {data.status_dynamo}
+          </span>
+        </div>
+        <button
+          onClick={toggleDynamo}
+          className={`w-full py-4 rounded-xl font-bold text-xl transition-all shadow-lg
+            ${isDynamoOn 
+              ? 'bg-green-500 hover:bg-green-600 shadow-green-500/20' 
+              : 'bg-red-500 hover:bg-red-600 shadow-red-500/20'
+            }`}
+        >
+          {isDynamoOn ? "MATIKAN DINAMO" : "NYALAKAN DINAMO"}
+        </button>
+        <p className="text-xs text-gray-500 mt-4">
+          *Dinamo otomatis mati jika <strong>pH &gt; 8.0</strong>
+        </p>
+      </div>
     </div>
   );
 }
