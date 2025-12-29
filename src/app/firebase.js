@@ -1,13 +1,10 @@
-// src/app/firebase.js
-
-import { initializeApp } from "firebase/app";
-// TAMBAHAN 1: Kita wajib import getDatabase
-import { getDatabase } from "firebase/database"; 
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
+  // --- PASTE CONFIG KAMU DI SINI (JANGAN SAMPAI HILANG) ---
   apiKey: "AIzaSyBMCZJifEaR3JTV00Huy1lLYUjxWxvBkNk",
   authDomain: "testiotdivercelfirebase.firebaseapp.com",
-  // Pastikan databaseURL ini benar (biasanya ada di copy-an config kamu)
   databaseURL: "https://testiotdivercelfirebase-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "testiotdivercelfirebase",
   storageBucket: "testiotdivercelfirebase.firebasestorage.app",
@@ -16,8 +13,9 @@ const firebaseConfig = {
   measurementId: "G-J0XT6V87WT"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// --- BAGIAN INI YANG KITA UBAH ---
+// Logika: Cek apakah ada app yang sudah jalan?
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// TAMBAHAN 2: Inisialisasi Database dan EXPORT biar bisa dipakai di file lain
-export const database = getDatabase(app);   
+// Export database biar bisa dipakai
+export const database = getDatabase(app);
